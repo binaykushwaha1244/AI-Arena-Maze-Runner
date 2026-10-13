@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>AI Arena - Maze Runner</title>
+    <!-- Google Fonts for rich modern typography with reliable local/system fallbacks -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body data-alg="astar">
+    <!-- Subtle Animated Floating Background Shapes -->
+    <div class="bg-shapes" aria-hidden="true">
+      <div class="bg-orb bg-orb-1"></div>
+      <div class="bg-orb bg-orb-2"></div>
+      <div class="bg-orb bg-orb-3"></div>
+    </div>
+
+    <!-- Hero Header: Logo, Title, Tagline & Controls -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-avatar" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+            <circle cx="12" cy="5" r="2"></circle>
+            <path d="M12 7v4"></path>
+            <line x1="8" y1="16" x2="8.01" y2="16"></line>
+            <line x1="16" y1="16" x2="16.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>AI Arena <span class="gradient-text">Maze Runner</span></h1>
+          <p class="tagline">Interactive Search &amp; Pathfinding Algorithm Playground</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btnSound" class="header-action-btn" title="Toggle audio sound effects">
+          <span class="icon">🔇</span>
+          <span>Sound Off</span>
+        </button>
+        <button id="btnGuide" class="header-action-btn guide-btn" title="View interactive guide">
+          <span class="icon">💡</span>
+          <span>How to Use</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Left Column: Arena, Canvas, Game Controls -->
+      <section class="card arena-card">
+        <!-- Top Mode & Hint Controls -->
+        <div class="modes-bar">
+          <div class="mode-switch">
+            <button id="mWatch" class="on" title="Watch AI algorithms solve the maze autonomously">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Watch the AI
+            </button>
+            <button id="mPlay" title="Interactive Game: Pick the next cell following the algorithm's rule">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01M17.3 5H6.7C4.1 5 2 7.1 2 9.7v4.6C2 16.9 4.1 19 6.7 19h10.6c2.6 0 4.7-2.1 4.7-4.7V9.7C22 7.1 19.9 5 17.3 5z"/></svg>
+              Be the algorithm
+            </button>
+          </div>
+          <label class="hint-toggle" title="Toggle cell numbering and order tips">
+            <input type="checkbox" id="hint" checked />
+            <span class="hint-label">Show hints</span>
+          </label>
+        </div>
+
+        <!-- Maze Editing Toolbar -->
+        <div class="tools-bar">
+          <div class="tool-cluster">
+            <span class="cluster-label">Edit:</span>
+            <button id="tWall" class="tool-btn on" title="Click or drag to place walls">
+              <span class="tool-icon">🧱</span> Draw walls
+            </button>
+            <button id="tErase" class="tool-btn" title="Click or drag to remove walls">
+              <span class="tool-icon">🧹</span> Erase
+            </button>
+            <button id="tStart" class="tool-btn" title="Click on an open floor cell to move Start">
+              <span class="tool-icon">🟢</span> Move start
+            </button>
+            <button id="tGoal" class="tool-btn" title="Click on an open floor cell to move Goal">
+              <span class="tool-icon">🚩</span> Move goal
+            </button>
+          </div>
+          <div class="tool-cluster right-cluster">
+            <button id="bMaze" class="tool-btn action-btn" title="Generate a fresh randomized maze">
+              <span class="tool-icon">🎲</span> New maze
+            </button>
+            <button id="bOpen" class="tool-btn action-btn" title="Clear internal walls to test Euclidean vs Manhattan paths">
+              <span class="tool-icon">⬜</span> Open field
+            </button>
+          </div>
+        </div>
+
+        <!-- Canvas Game Surface with Rounded Board Frame -->
+        <div class="canvas-container">
+          <canvas id="cv" aria-label="AI Maze Runner Simulation Canvas"></canvas>
+        </div>
+
+        <!-- Robot Speech / Status Feedback Banner -->
+        <div class="say-container">
+          <div class="say-badge">
+            <span class="robot-face">🤖</span>
+            <span class="say-status">AI Status</span>
+          </div>
+          <div class="say" id="say">Pick an algorithm and press Start.</div>
+        </div>
+
+        <!-- Data Structure Strip (Waiting List / Frontier) -->
+        <div class="ds-container">
+          <div id="ds"></div>
+        </div>
+
+        <!-- Bottom Primary Execution Bar -->
+        <div class="ctrl-bar">
+          <div class="btn-group-main">
+            <button class="go" id="bGo" title="Run search simulation">
+              <span class="go-icon">▶</span>
+              <span>Start</span>
+            </button>
+            <button id="bStep" class="btn-sub" title="Advance simulation by single step">
+              <span class="sub-icon">⏯</span> Step
+            </button>
+            <button id="bReset" class="btn-sub" title="Reset current search to start state">
+              <span class="sub-icon">↺</span> Reset
+            </button>
+            <button id="bCmp" class="btn-accent" title="Benchmark all 4 algorithms on this exact maze">
+              <span class="sub-icon">📊</span> Compare all 4
+            </button>
+          </div>
+
+          <div class="controls-secondary">
+            <div class="speed-box" title="Simulation speed: steps per second">
+              <span class="speed-label">Speed</span>
+              <input type="range" id="spd" min="1" max="300" value="12" />
+            </div>
+
+            <label class="race-box" title="Use Arrow keys or WASD to race against the algorithm!">
+              <input type="checkbox" id="race" />
+              <span class="race-text">Race me <span class="keys-pill">WASD / Keys</span></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Visual Palette Legend -->
+        <div class="legend">
+          <span class="legend-item"><i class="leg-bot"></i>AI robot</span>
+          <span class="legend-item"><i class="leg-frontier"></i>Frontier (waiting)</span>
+          <span class="legend-item"><i class="leg-visited-early"></i>Visited (early)</span>
+          <span class="legend-item"><i class="leg-visited-late"></i>Visited (late)</span>
+          <span class="legend-item"><i class="leg-backtrack"></i>Backtracking</span>
+          <span class="legend-item"><i class="leg-path"></i>Final path</span>
+        </div>
+      </section>
+
+      <!-- Right Column: Algorithm Selector, Pseudocode, Specs, Stats, Benchmark -->
+      <aside>
+        <!-- Algorithm Picker Card -->
+        <div class="card alg-picker-card">
+          <div class="card-header">
+            <h2>Select Algorithm</h2>
+            <span class="card-badge">4 Pathfinders</span>
+          </div>
+          <div class="algs" id="algs"></div>
+        </div>
+
+        <!-- Live Pseudocode Execution Panel -->
+        <div class="card pseudo-card">
+          <div class="card-header">
+            <h2 id="pseudoTitle">Execution Pseudocode</h2>
+            <span class="card-badge code-badge">Live Step</span>
+          </div>
+          <div class="pseudo-list" id="pseudoList"></div>
+        </div>
+
+        <!-- Algorithm Info Card -->
+        <div class="card info-card" id="info"></div>
+
+        <!-- Live Metrics & Game Stats -->
+        <div class="card stats-card">
+          <div class="card-header">
+            <h2>Live Stats</h2>
+            <span class="live-pill"><span class="live-dot"></span> Real-time</span>
+          </div>
+          <div class="stats">
+            <div class="stat stat-exp">
+              <span class="stat-icon">🔍</span>
+              <b id="sE">0</b>
+              <span>cells explored</span>
+            </div>
+            <div class="stat stat-walk">
+              <span class="stat-icon">🐾</span>
+              <b id="sW">0</b>
+              <span>steps walked</span>
+            </div>
+            <div class="stat stat-back">
+              <span class="stat-icon">↩</span>
+              <b id="sB">0</b>
+              <span>steps backtracked</span>
+            </div>
+            <div class="stat stat-front">
+              <span class="stat-icon">⏳</span>
+              <b id="sF">0</b>
+              <span>in frontier</span>
+            </div>
+            <div class="stat stat-path">
+              <span class="stat-icon">📏</span>
+              <b id="sP">-</b>
+              <span>path length</span>
+            </div>
+            <div class="stat stat-dead">
+              <span class="stat-icon">🚫</span>
+              <b id="sD">0</b>
+              <span>dead ends hit</span>
+            </div>
+            <div class="stat stat-score">
+              <span class="stat-icon">⭐</span>
+              <b id="sS">0</b>
+              <span>score</span>
+            </div>
+            <div class="stat stat-streak">
+              <span class="stat-icon">🔥</span>
+              <b id="sK">0</b>
+              <span>streak</span>
+            </div>
+            <div class="stat stat-acc">
+              <span class="stat-icon">🎯</span>
+              <b id="sA">-</b>
+              <span>accuracy</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4-Way Comparison Benchmark Card -->
+        <div class="card cmp-card">
+          <div class="card-header">
+            <h2>Algorithm Comparison</h2>
+            <span class="card-badge">Benchmark</span>
+          </div>
+          <div id="cmp">
+            <p class="p2">
+              Press <b>Compare all 4</b> to run BFS, DFS, Greedy and A* on this exact
+              maze and see the performance numbers side by side.
+            </p>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- First Visit "How to Use" Modal Dialog -->
+    <div id="guideModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="guideHeading">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">🎮</span>
+            <h3 id="guideHeading">How to Play AI Arena</h3>
+          </div>
+          <button id="guideClose" class="modal-close" aria-label="Close guide">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="guide-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h4>Pick an Algorithm &amp; Watch Pseudocode</h4>
+              <p>Choose <b>BFS</b>, <b>DFS</b>, <b>Greedy</b>, or <b>A*</b>. As the robot explores, the <b>Pseudocode panel</b> highlights each step (dequeue, walk, backtrack, explore) in real time.</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h4>Customize the Arena or Race the AI</h4>
+              <p>Click &amp; drag to <b>draw custom walls</b> or clear open fields. Toggle <b>Race me</b> and steer the yellow dot with <kbd>WASD</kbd> or arrow keys to beat the robot!</p>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h4>Switch to "Be the Algorithm" Game Mode</h4>
+              <p>Test your intuition: choose which waiting cell the algorithm must visit next according to its data structure rule. Earn score streaks for correct picks!</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="guideDismiss" class="modal-btn-primary">Got it, let's explore!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts in Strict Execution Order -->
+    <script src="js/config.js"></script>
+    <script src="js/maze.js"></script>
+    <script src="js/algorithms.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/features.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
